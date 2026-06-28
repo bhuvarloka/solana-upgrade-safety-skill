@@ -1,8 +1,6 @@
 # LADDER 1 — Classify compatibility
 
-Runs only when [LADDER 0](detect-model.md) returned an analyzable model. A single SAFE/BREAKING verdict is too blunt — an instruction change is not account corruption, and developers act on the distinction. So this is five categories, walked field-by-field and then across the whole IDL.
-
-Walk top to bottom per change, **stop at the first rung that matches**. This mirrors `engine/src/diff.ts`; keep them identical.
+Runs only when [LADDER 0](detect-model.md) returned an analyzable model. Walk top to bottom per change, **stop at the first rung that matches**. Mirrors `engine/src/diff.ts`; keep them identical.
 
 ```
 Per field, per analyzable account struct — stop at the first match:
@@ -42,8 +40,4 @@ Across the whole IDL:
         → REFUSE       "not analyzable — see the gate; needs manual review"
 ```
 
-## Prove it (the round-trip)
-
-The verdict is checkable in bytes: serialize a value with the old layout, deserialize with the new. If the verdict was MIGRATE, the bytes come out garbage; if SAFE (after a realloc that zero-extends the account), they survive intact. See `engine/test/roundtrip.test.ts`.
-
-Next, when the verdict is MIGRATE → [generate-migration.md](generate-migration.md).
+The verdict is provable in bytes — see `engine/test/roundtrip.test.ts`. When MIGRATE → [generate-migration.md](generate-migration.md).

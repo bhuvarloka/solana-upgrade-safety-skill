@@ -1,6 +1,6 @@
 # Propose mode — evaluate a change before it lands
 
-The other input mode. Claude is usually asked *before* the edit exists: "I'm about to add this field / change this type to my account — is that safe?" There is no `after.json` yet, so synthesize one and run the same ladders.
+When asked *before* the edit exists ("I'm about to add this field — is that safe?") there's no `after.json`. Synthesize one and run the same ladders.
 
 ## Flow
 
@@ -15,8 +15,6 @@ The other input mode. Claude is usually asked *before* the edit exists: "I'm abo
    - type widened in place → **add a new field** instead of changing the old one, or **version the struct** (`V1`→`V2`) and migrate.
    - field removed → keep it (mark deprecated) or migrate.
 5. **If SAFE**, say so plainly and confirm it's append-only.
-
-This is what turns the skill from a linter into an assistant: it doesn't just flag the unsafe edit, it proposes the safe implementation.
 
 ## Safe-by-construction rules to suggest
 

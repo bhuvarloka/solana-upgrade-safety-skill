@@ -43,11 +43,14 @@ If `engine/node_modules` is missing, run `pnpm -C <skill-dir>/engine install` on
 
 ## Reporting
 
-The developer asked a yes/no question. Answer it; don't tour.
+Terse. The developer wants the answer, not a write-up. Hard rules:
 
-- Verdict line, then at most one line per breaking change (`where — what changed — why it breaks`).
-- SAFE: a single line. Don't write files, don't elaborate.
-- Close by offering the migration in one sentence ("Want the migration scaffold?"). Generate files, open `migration.rs`, or explain offsets only if they say yes.
+- **SAFE** → exactly one line: `✅ Safe — in-place upgrade won't corrupt accounts.` Nothing else.
+- **Otherwise** → the verdict line, then **one bullet per breaking change** (`Account.field: u32→u64 — corrupts every existing account`). Cap at 5 bullets; if more, show the worst 5 and `…and N more`.
+- Then one closing line: `Want the migration? I'll generate it.` Stop there.
+- Never paste `report.md`, never recite the checklist, never explain byte offsets or open `migration.rs` unless asked. No preamble ("I'll analyze…"), no recap of what you ran.
+
+Output ceiling for the whole reply: ~7 lines. If you're writing more, you're touring.
 
 ## Command
 

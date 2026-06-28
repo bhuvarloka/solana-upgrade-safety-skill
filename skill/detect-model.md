@@ -1,8 +1,6 @@
 # LADDER 0 — Detect the serialization model (the gate)
 
-Run this **before** any compatibility verdict. The IDL does not fully encode layout for every account type, so first establish what you're analyzing, then refuse confidently where the analysis would be unsound.
-
-Walk top to bottom, **stop at the first rung that matches**. The order is deliberate: the most restrictive model wins, because a real IDL (e.g. Raydium's) mixes Borsh and zero-copy types — any hand-rolled serialization should refuse, not get a soft caveat.
+Run this **before** any compatibility verdict — the IDL doesn't fully encode layout, so refuse where analysis would be unsound. Walk top to bottom, **stop at the first match**. Order matters: most restrictive model wins, because a real IDL (e.g. Raydium's) mixes Borsh and zero-copy.
 
 ```
 Detect serialization model — stop at the first match:
@@ -25,7 +23,7 @@ Detect serialization model — stop at the first match:
                                                           (or pass it explicitly).
 ```
 
-> **Order note:** the plan lists these 1=anchor, 2=zero-copy, 3=manual, 4=unknown. The engine — and this doc — check **manual (0.3) before zero-copy (0.2)** so the most restrictive model wins on a mixed IDL. This doc mirrors `engine/src/detect-model.ts`; keep them identical.
+> **Order note:** check **manual (0.3) before zero-copy (0.2)** so the most restrictive model wins on a mixed IDL. Mirrors `engine/src/detect-model.ts`; keep them identical.
 
 **Override.** A user who knows the model can assert it (`--assume anchor-borsh | zero-copy | manual`), which forces the rung and skips detection.
 
