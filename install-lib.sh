@@ -7,11 +7,15 @@ CORE_SKILL_REPO="https://github.com/solanabr/solana-dev-skill.git"
 
 die() { echo -e "${RED}✗${NC} $1" >&2; exit 1; }
 
+PKG=""
 preflight() {
   command -v node >/dev/null || die "node not found — install Node 20+ first."
   [ "$(node -p 'process.versions.node.split(".")[0]')" -ge 20 ] || die "Node 20+ required."
-  command -v pnpm >/dev/null || die "pnpm not found — see https://pnpm.io/installation"
   command -v git  >/dev/null || die "git not found."
+  if command -v pnpm >/dev/null; then PKG=pnpm
+  elif command -v npm >/dev/null; then PKG=npm
+  else die "no package manager found — install pnpm (https://pnpm.io) or npm."
+  fi
 }
 
 install_core_skill() {
@@ -37,11 +41,15 @@ install_skill() {
   rsync -a --exclude node_modules --exclude test --exclude vitest.config.ts "$src_dir/engine" "$dest/"
   echo -e "${GREEN}✓${NC} skill installed to $dest"
 
-  echo -e "${BLUE}Installing engine dependencies…${NC}"
-  ( cd "$dest/engine" && pnpm install --frozen-lockfile --prod ) || die "engine dependency install failed"
+  echo -e "${BLUE}Installing engine dependencies ($PKG)…${NC}"
+  if [ "$PKG" = pnpm ]; then
+    ( cd "$dest/engine" && pnpm install --frozen-lockfile --prod ) || die "engine dependency install failed"
+  else
+    ( cd "$dest/engine" && npm install --omit=dev --no-audit --no-fund ) || die "engine dependency install failed"
+  fi
 
   local fx="$src_dir/fixtures/pairs/identical-safe"
-  ( cd "$dest/engine" && pnpm run check-upgrade "$fx/before.json" "$fx/after.json" --out /tmp/upgrade-safety-smoke >/dev/null 2>&1 )
+  ( cd "$dest/engine" && npx tsx src/cli.ts "$fx/before.json" "$fx/after.json" >/dev/null 2>&1 )
   [ $? -eq 0 ] || die "engine smoke test failed — install is broken"
   echo -e "${GREEN}✓${NC} engine ready (smoke test passed)"
 

@@ -41,7 +41,13 @@ No `after` yet? See [propose-mode.md](propose-mode.md): synthesize it from the p
 
 The ladders are [detect-model.md](detect-model.md) (the serialization-model gate — refuse manual/unknown) and [classify.md](classify.md) (five categories → SAFE / MIGRATE / COORDINATE / REFUSE). They mirror `engine/src/detect-model.ts` and `engine/src/diff.ts`; change one, change both.
 
-If `engine/node_modules` is missing, run `pnpm -C <skill-dir>/engine install` once. If the engine is absent, tell the user to reinstall and stop.
+**No pnpm?** It's only needed to install. Once `engine/node_modules` exists, run the engine with npx instead — same args:
+
+```
+cd <skill-dir>/engine && npx tsx src/cli.ts <before.json> <after.json> [--out <dir>] [--assume <model>]
+```
+
+If `engine/node_modules` is missing, install deps once (`pnpm install`, or `npm install` if pnpm is unavailable) in `<skill-dir>/engine`. If the engine is absent, tell the user to reinstall and stop.
 
 ## Reporting
 
