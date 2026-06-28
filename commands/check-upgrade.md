@@ -9,21 +9,21 @@ Run the upgrade-safety analysis on a pair of Anchor IDLs (or a proposed change) 
 ## Usage
 
 ```
-pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> --out <dir> [--assume <model>]
+pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--out <dir>] [--assume <model>]
 ```
 
-`<skill-dir>` is the installed skill directory (e.g. `~/.claude/skills/upgrade-safety`). Use absolute paths for the IDLs and `--out` so it runs from any working directory.
+`<skill-dir>` is the installed skill directory (e.g. `~/.claude/skills/upgrade-safety`). Use absolute paths for the IDLs so it runs from any working directory.
 
 - `<before.json>` — the currently-deployed IDL (or `anchor idl fetch <program-id>`).
 - `<after.json>` — the new/proposed IDL.
-- `--out <dir>` — where to write artifacts (default: current dir).
+- `--out <dir>` — write artifacts to `<dir>`. Omit it to print the verdict only (no files).
 - `--assume <model>` — force the serialization model: `anchor-borsh` | `zero-copy` | `manual`. Skips detection.
 
 ## What it does
 
 1. **Gate** — detect the serialization model ([detect-model.md](../skill/detect-model.md)). Refuses confidently on manual/unknown layouts.
 2. **Classify** — walk the five compatibility categories ([classify.md](../skill/classify.md)) and roll up to SAFE / MIGRATE / COORDINATE / REFUSE.
-3. **Generate** — write `report.md` + `release-checklist.md` always; add `migration.rs`, `migration.ts`, and `regression.test.ts` when the verdict is MIGRATE ([generate-migration.md](../skill/generate-migration.md)).
+3. **Generate** (with `--out`) — write `report.md`; add `release-checklist.md` unless SAFE, and `migration.rs` / `migration.ts` / `regression.test.ts` when MIGRATE ([generate-migration.md](../skill/generate-migration.md)).
 
 ## Exit codes
 

@@ -16,10 +16,14 @@ function artifacts(pair: string) {
 }
 
 describe("generateArtifacts", () => {
-  it("always emits a report and a release checklist", () => {
-    const a = artifacts("append-safe");
-    expect(a["report.md"]).toBeDefined();
-    expect(a["release-checklist.md"]).toBeDefined();
+  it("always emits a report; checklist only when there's work to do", () => {
+    const safe = artifacts("append-safe");
+    expect(safe["report.md"]).toBeDefined();
+    expect(safe["release-checklist.md"]).toBeUndefined();
+
+    const migrate = artifacts("moved-migration");
+    expect(migrate["report.md"]).toBeDefined();
+    expect(migrate["release-checklist.md"]).toBeDefined();
   });
 
   it("report names the verdict and lists each change with its category", () => {

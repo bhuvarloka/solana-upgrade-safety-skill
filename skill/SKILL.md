@@ -4,46 +4,51 @@ description: Analyzes whether an Anchor program upgrade will corrupt already-dep
 user-invocable: true
 ---
 
-# upgrade-safety-skill
+# upgrade-safety
 
 > don't brick the mainnet
 
-> **Extends**: `solana-dev` skill — Core Solana development (Anchor, Borsh, IDL, testing). Borsh/Anchor/IDL basics live there; this skill assumes them. Install it from https://github.com/solanabr/solana-dev-skill (the kit vendors it under `.claude/skills/ext/solana-dev`).
+Solana keeps account data as raw Borsh bytes in a fixed field order, and deployed accounts keep those bytes forever. Reorder or insert a field mid-struct and the new code reads old bytes at the wrong offsets — silently corrupting stored values. Rust compiles it; Anchor doesn't flag it. This skill catches it and generates the fix.
 
-Solana stores account data as raw Borsh bytes in a fixed field order, and existing on-chain accounts keep those bytes forever. During a refactor it is easy to reorder a field or insert one mid-struct without realizing the new code now reads old bytes at the wrong offsets — corrupting stored values. Rust compiles it; Anchor does not flag it. This skill compares two program versions, says precisely what breaks and how badly, and generates the migration and the safety net.
-
-The honest scope: neither Rust nor Anchor automatically warns that an account-layout change is incompatible with already-deployed data. Anchor ships migration *primitives* (`Migration`, `realloc`, `idl fetch-historical`) but no workflow that *detects* an incompatible change for you. That gap is this skill.
+> **Extends** `solana-dev` (Anchor/Borsh/IDL basics): https://github.com/solanabr/solana-dev-skill
 
 ## When to use this
 
-- "I'm about to add / change / remove a field in this account — is it safe?" (propose mode)
-- "Diff these two IDL versions and tell me if an in-place upgrade corrupts accounts."
-- "Generate the migration for this account-layout change."
+- "Is it safe to add / change / remove / reorder a field in this account?"
+- "Diff these two IDL versions — does an in-place upgrade corrupt accounts?"
+- "Generate the migration for this layout change."
 - Gating a PR that touches an Anchor account struct.
 
-## Operating procedure (the Ladder)
+## Procedure
 
-Walk these in order. Each is a deterministic decision ladder — ordered conditions, stop at the first match — so the same input always yields the same verdict.
+Run the bundled engine — it's the source of truth. Never hand-classify.
 
-1. **Gate first — [detect-model.md](detect-model.md) (LADDER 0).** Detect the serialization model. Only standard Anchor Borsh is fully analyzable; zero-copy is analyzed *with a caveat*; manual/unknown is **refused confidently**. Never analyze past a refusal.
-2. **Classify — [classify.md](classify.md) (LADDER 1).** Walk each field, then the whole IDL, into five categories (STORAGE-SAFE, MIGRATION-REQUIRED, UNSAFE, CLIENT-BREAKING, ABI-BREAKING) and roll up to SAFE / MIGRATE / COORDINATE / REFUSE.
-3. **Generate — [generate-migration.md](generate-migration.md) (Step 2).** Emit the report and checklist always; emit migration.rs / migration.ts / regression test when the verdict is MIGRATE.
-4. **Proposed change? — [propose-mode.md](propose-mode.md).** When there is no `after` yet, synthesize it from the proposed edit, run the ladders, and rewrite an unsafe change into a safe one.
-
-## The engine
-
-Diagnosis and generation are mechanical, not vibes — they run in TypeScript under this skill's `engine/`, and the round-trip proof uses `@coral-xyz/anchor`'s `BorshAccountsCoder` to prove the verdict in real bytes. The ladders above are identical to `engine/src/detect-model.ts` and `engine/src/diff.ts`; if you change one, change both.
-
-**Always run the engine — never hand-classify.** The bundled engine is the source of truth; eyeballing the diff defeats the point of a deterministic verdict. The engine lives in the `engine/` directory next to this file. Run it with `pnpm -C` pointed at that directory and **absolute** paths for the IDLs and `--out`, so it works regardless of your current directory:
+**1. Diagnose (no files).** Run without `--out` to get just the verdict:
 
 ```
-pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> --out <dir> [--assume <model>]
+pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--assume <model>]
 ```
 
-`<skill-dir>` is the directory containing this SKILL.md (e.g. `~/.claude/skills/upgrade-safety`). Exit code: **1 on MIGRATE** (CI-gateable), **0** on SAFE/COORDINATE/REFUSE, **2** on bad input (report the error, do not treat as a verdict).
+`<skill-dir>` is this file's directory (e.g. `~/.claude/skills/upgrade-safety`); use absolute paths for the IDLs. Exit code: **1 = MIGRATE** (CI-gateable), **0** = SAFE/COORDINATE/REFUSE, **2** = bad input (report the error, not a verdict).
 
-If `engine/node_modules` is missing, run `pnpm -C <skill-dir>/engine install` once first. If the engine is absent entirely, tell the user to reinstall the skill and stop — do not fall back to eyeballing the diff.
+**2. Report in chat** (see below). Stop here unless the developer wants the migration.
+
+**3. Generate (only when asked).** Re-run with `--out <dir>` to write `report.md`, `release-checklist.md`, and — when MIGRATE — `migration.rs` / `migration.ts` / `regression.test.ts`. See [generate-migration.md](generate-migration.md).
+
+No `after` yet? See [propose-mode.md](propose-mode.md): synthesize it from the proposed edit, run the ladders, rewrite an unsafe change into a safe one.
+
+The ladders are [detect-model.md](detect-model.md) (the serialization-model gate — refuse manual/unknown) and [classify.md](classify.md) (five categories → SAFE / MIGRATE / COORDINATE / REFUSE). They mirror `engine/src/detect-model.ts` and `engine/src/diff.ts`; change one, change both.
+
+If `engine/node_modules` is missing, run `pnpm -C <skill-dir>/engine install` once. If the engine is absent, tell the user to reinstall and stop.
+
+## Reporting
+
+The developer asked a yes/no question. Answer it; don't tour.
+
+- Verdict line, then at most one line per breaking change (`where — what changed — why it breaks`).
+- SAFE: a single line. Don't write files, don't elaborate.
+- Close by offering the migration in one sentence ("Want the migration scaffold?"). Generate files, open `migration.rs`, or explain offsets only if they say yes.
 
 ## Command
 
-- [check-upgrade](../commands/check-upgrade.md) — run the full analysis on an IDL pair and emit artifacts.
+- [check-upgrade](../commands/check-upgrade.md)

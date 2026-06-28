@@ -1,7 +1,3 @@
-// Step 2 — generate the fix. Turn a classification result into artifacts: the
-// human-readable report and release checklist (always), plus migration.rs / migration.ts
-// and a regression test when the upgrade actually needs a migration.
-
 import type { Idl, IdlField, IdlType } from "./layout.ts";
 import type { Change, DiffResult, Verdict } from "./diff.ts";
 
@@ -17,10 +13,12 @@ const VERDICT_LINE: Record<Verdict, string> = {
 export function generateArtifacts(before: Idl, after: Idl, result: DiffResult): Artifacts {
   const out: Artifacts = {
     "report.md": report(result),
-    "release-checklist.md": checklist(result.verdict),
   };
 
-  // Only emit migration code when stored-account data is at risk.
+  if (result.verdict !== "SAFE") {
+    out["release-checklist.md"] = checklist(result.verdict);
+  }
+
   if (result.verdict === "MIGRATE") {
     const account = migratedAccount(result);
     if (account) {

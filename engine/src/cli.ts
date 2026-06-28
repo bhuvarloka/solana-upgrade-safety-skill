@@ -1,5 +1,3 @@
-// check-upgrade CLI: classify a before/after IDL pair and emit migration artifacts.
-//   tsx src/cli.ts <before.json> <after.json> [--out <dir>] [--assume <model>]
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { analyzeUpgrade } from "./diff.ts";
@@ -12,7 +10,7 @@ function main(argv: string[]): number {
     args: argv,
     allowPositionals: true,
     options: {
-      out: { type: "string", default: "." },
+      out: { type: "string" },
       assume: { type: "string" },
     },
   });
@@ -38,16 +36,19 @@ function main(argv: string[]): number {
   if (result.model.caveat) console.error(`caveat: ${result.model.caveat}`);
   if (result.model.refuse) console.error(`refused: ${result.model.reason}`);
 
-  const artifacts = generateArtifacts(before, after, result);
-  mkdirSync(values.out, { recursive: true });
-  for (const [name, content] of Object.entries(artifacts)) {
-    writeFileSync(`${values.out}/${name}`, content);
+  console.log(`verdict: ${result.verdict}`);
+
+  const out = values.out;
+  if (out !== undefined) {
+    const artifacts = generateArtifacts(before, after, result);
+    mkdirSync(out, { recursive: true });
+    for (const [name, content] of Object.entries(artifacts)) {
+      writeFileSync(`${out}/${name}`, content);
+    }
+    console.log(`wrote ${Object.keys(artifacts).length} artifact(s) to ${out}/`);
   }
 
-  console.log(`verdict: ${result.verdict}`);
-  console.log(`wrote ${Object.keys(artifacts).length} artifact(s) to ${values.out}/`);
-  // Non-zero exit on a corrupting upgrade so CI can gate on it (step 12 reuses this).
-  return result.verdict === "MIGRATE" ? 1 : 0;
+  return result.verdict === "MIGRATE" ? 1 : 0; // exit 1 = CI gate fails
 }
 
 process.exit(main(process.argv.slice(2)));

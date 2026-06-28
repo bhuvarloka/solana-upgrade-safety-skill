@@ -1,27 +1,29 @@
 # Step 2 — Generate the fix
 
-The pivot from reviewer to engineer. A reviewer tells you something breaks; this hands you the migration, the safety net, and the release ritual. Driven by the classification result from [classify.md](classify.md) and emitted by `engine/src/codegen.ts`.
+Driven by the [classify.md](classify.md) result, emitted by `engine/src/codegen.ts`.
 
 ## What gets emitted
 
 Always:
 - **`report.md`** — the verdict + the classification table (category · rung · where · why).
-- **`release-checklist.md`** — deploy to devnet → run migration → verify a sample of real accounts decode → promote to mainnet. An automated version of the manual ritual teams already follow.
+
+When the verdict is **not SAFE** (there's release work to do):
+- **`release-checklist.md`** — devnet → run migration → verify a sample decodes → mainnet. SAFE emits no checklist.
 
 Only when the verdict is **MIGRATE** (stored-account data is at risk):
 - **`migration.rs`** — a versioned struct pair (`AccountV1` → `AccountV2`) plus a `realloc`-based `migrate` instruction scaffold. The field copy is left as a `TODO` with placeholders — review before mainnet.
 - **`migration.ts`** — the client-side migration call (targets `@solana/kit`).
 - **`regression.test.ts`** — writes an account at the OLD layout, applies the migration, asserts the NEW layout decodes it without corruption (via `BorshAccountsCoder`).
 
-A SAFE, COORDINATE, or REFUSE verdict emits only the report and checklist — there is nothing to migrate, so no migration code is generated.
+A COORDINATE or REFUSE verdict emits the report and checklist (no migration code). A SAFE verdict emits only the report.
 
 ## Run it
 
 ```
-pnpm run check-upgrade <before.json> <after.json> --out <dir> [--assume <model>]
+pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> --out <dir> [--assume <model>]
 ```
 
-Writes the artifacts to `<dir>`. Exit code **1 on MIGRATE** (so CI can gate on it), **0** otherwise. See a worked example in [examples/](../examples/).
+`--out` writes the artifacts to `<dir>`; omit it for verdict-only. Exit code **1 on MIGRATE** (so CI can gate on it), **0** otherwise. See a worked example in [examples/](../examples/).
 
 ## Finish the scaffold
 
