@@ -208,7 +208,6 @@ export async function migrate${account}(params: {
 `;
 }
 
-// --- regression test (write old → migrate → assert new reads) ---
 function regressionTest(account: string, before: Idl, after: Idl): string {
   return `// Generated regression test for the \`${account}\` migration.
 // Proves an account written at the OLD layout reads correctly after migration.
