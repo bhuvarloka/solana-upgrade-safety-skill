@@ -43,7 +43,9 @@ pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--assum
 pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> --json
 ```
 
-It prints one JSON line, `{ "verdict": ..., "artifacts": { "migration.rs": "...", ... } }`, and writes nothing. (`pnpm run` adds a `$ tsx …` banner line first — parse the line that starts with `{`.) **You** then write each artifact with your Write tool into the developer's project (e.g. `<cwd>/migration/migration.rs`). Files created through your tool show up in the editor immediately — the engine writing them itself does not reliably refresh the file tree, which is why generation goes through you. Open `migration.rs` after writing. See [generate-migration.md](generate-migration.md).
+It prints one JSON line, `{ "verdict": ..., "artifacts": { "migration.rs": "...", ... } }`, and writes nothing. (`pnpm run` adds a `$ tsx …` banner line first — parse the line that starts with `{`.) **You** then write each artifact with your Write tool into the developer's project (e.g. `<cwd>/migration/migration.rs`). See [generate-migration.md](generate-migration.md).
+
+**End by printing the absolute path to the folder you wrote**, as a clickable link (e.g. `/Users/.../project/migration/`) — not a relative `migration/`. A skill writes to disk; it cannot repaint the editor's file tree (only the editor can), so the developer may not see a new folder appear. A clickable absolute path lets them open it in one click without hunting or refreshing. Never claim files "appear immediately" — they're on disk, but the sidebar repaint is the editor's job, not yours.
 
 (CI uses `--out <dir>` to write directly; that path is for pipelines, not the chat flow.)
 
