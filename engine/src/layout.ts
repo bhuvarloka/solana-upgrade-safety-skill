@@ -72,7 +72,7 @@ const PRIMITIVE_SIZE: Record<string, number> = {
   publicKey: 32, // legacy spelling
 };
 
-function typeLabel(t: IdlType): string {
+export function typeLabel(t: IdlType): string {
   if (typeof t === "string") return t;
   if ("defined" in t) return typeof t.defined === "string" ? t.defined : t.defined.name;
   if ("option" in t) return `Option<${typeLabel(t.option)}>`;
@@ -94,7 +94,9 @@ function sizeOf(t: IdlType, idl: Idl, seen: Set<string> = new Set()): number | u
     const name = typeof t.defined === "string" ? t.defined : t.defined.name;
     if (seen.has(name)) return undefined; // recursive type => not fixed
     seen.add(name);
-    return sizeOfTypeDef(name, idl, seen);
+    const size = sizeOfTypeDef(name, idl, seen);
+    seen.delete(name); // backtrack: sibling fields of the same type must resolve too
+    return size;
   }
   return undefined;
 }
@@ -115,6 +117,10 @@ function sizeOfTypeDef(name: string, idl: Idl, seen: Set<string>): number | unde
     // Fieldless enum => 1-byte discriminant. Data-carrying variants are not fixed-size.
     const hasData = def.type.variants.some((v) => v.fields != null);
     return hasData ? undefined : 1;
+  }
+  if (def.type.kind === "type" && def.type.alias != null) {
+    // Type alias (e.g. `type Foo = u64;`) — size is the aliased type's size.
+    return sizeOf(def.type.alias, idl, seen);
   }
   return undefined;
 }

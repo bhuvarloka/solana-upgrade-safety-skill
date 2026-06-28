@@ -32,7 +32,6 @@ export function generateArtifacts(before: Idl, after: Idl, result: DiffResult): 
   return out;
 }
 
-// --- report ---
 function report(result: DiffResult): string {
   const rows =
     result.changes.length === 0
@@ -57,7 +56,6 @@ function locus(c: Change): string {
   return "";
 }
 
-// --- release checklist ---
 function checklist(verdict: Verdict): string {
   const migrate = verdict === "MIGRATE";
   return `# Release checklist
@@ -70,7 +68,6 @@ ${migrate ? "- [ ] Confirm every affected account type has been migrated before 
 ${verdict === "COORDINATE" ? "- [ ] Notify client/SDK consumers of the breaking change and ship updated clients.\n" : ""}`;
 }
 
-// --- which account needs migrating ---
 function migratedAccount(result: DiffResult): string | undefined {
   const c = result.changes.find(
     (x) => x.account && (x.category === "MIGRATION-REQUIRED" || x.category === "UNSAFE"),
@@ -114,10 +111,12 @@ function fieldsOf(idl: Idl, account: string): IdlField[] {
 
 function rustStruct(name: string, fields: IdlField[]): string {
   const body = fields.map((f) => `    pub ${f.name}: ${rustType(f.type)},`).join("\n");
-  return `#[account]\npub struct ${name} {\n${body}\n}`;
+  // Bare Borsh derives — NOT #[account] — so these helpers don't add/check their own
+  // discriminator. The on-chain account keeps the original program's discriminator,
+  // which we preserve manually in `migrate`.
+  return `#[derive(AnchorSerialize, AnchorDeserialize, Default)]\npub struct ${name} {\n${body}\n}`;
 }
 
-// --- migration.rs ---
 function migrationRs(account: string, before: Idl, after: Idl): string {
   const v1 = rustStruct(`${account}V1`, fieldsOf(before, account));
   const v2 = rustStruct(`${account}V2`, fieldsOf(after, account));
@@ -133,12 +132,10 @@ ${v2}
 
 #[derive(Accounts)]
 pub struct Migrate<'info> {
-    #[account(
-        mut,
-        realloc = 8 + std::mem::size_of::<${account}V2>(),
-        realloc::payer = payer,
-        realloc::zero = false,
-    )]
+    // No compile-time realloc: with variable-length fields (String/Vec) the final size
+    // isn't known until serialization. We realloc by hand in migrate() from the actual
+    // Borsh length. realloc::zero is irrelevant here for the same reason.
+    #[account(mut)]
     /// CHECK: deserialized manually as ${account}V1, rewritten as ${account}V2.
     pub account: AccountInfo<'info>,
     #[account(mut)]
@@ -148,7 +145,11 @@ pub struct Migrate<'info> {
 
 pub fn migrate(ctx: Context<Migrate>) -> Result<()> {
     let info = &ctx.accounts.account;
-    let old = ${account}V1::try_deserialize(&mut &info.try_borrow_data()?[..])?;
+
+    // Preserve the original 8-byte Anchor discriminator; the main program still reads
+    // this account as \`${account}\`, so the discriminator must not change.
+    let disc: [u8; 8] = info.try_borrow_data()?[..8].try_into().unwrap();
+    let old = ${account}V1::deserialize(&mut &info.try_borrow_data()?[8..])?;
 
     // TODO: map every old field into the new layout. Defaults are placeholders.
     let new = ${account}V2 {
@@ -156,15 +157,38 @@ pub fn migrate(ctx: Context<Migrate>) -> Result<()> {
         ..Default::default()
     };
 
+    // Size from the actual serialized bytes (Borsh has no padding), then resize +
+    // top up rent before writing.
+    let body = new.try_to_vec()?;
+    let needed = 8 + body.len();
+    if needed != info.data_len() {
+        let rent = Rent::get()?;
+        let min = rent.minimum_balance(needed);
+        let cur = info.lamports();
+        if min > cur {
+            anchor_lang::system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    anchor_lang::system_program::Transfer {
+                        from: ctx.accounts.payer.to_account_info(),
+                        to: info.to_account_info(),
+                    },
+                ),
+                min - cur,
+            )?;
+        }
+        info.realloc(needed, false)?;
+    }
+
     let mut data = info.try_borrow_mut_data()?;
-    new.try_serialize(&mut &mut data[..])?;
+    data[..8].copy_from_slice(&disc);
+    data[8..needed].copy_from_slice(&body);
     let _ = old;
     Ok(())
 }
 `;
 }
 
-// --- migration.ts (client call) ---
 function migrationTs(account: string): string {
   return `// Generated client-side migration call for \`${account}\`.
 // Targets @solana/kit; wire in your program client and signer.
@@ -223,6 +247,8 @@ function minimalIdl(idl: Idl, account: string): Idl {
     metadata: idl.metadata,
     instructions: [],
     accounts: idl.accounts?.filter((a) => a.name === account),
-    types: idl.types?.filter((t) => t.name === account),
+    // Keep the full type table: the account's fields may reference other defined
+    // types, which BorshAccountsCoder must resolve.
+    types: idl.types,
   } as Idl;
 }

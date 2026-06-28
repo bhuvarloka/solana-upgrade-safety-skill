@@ -2,7 +2,7 @@
 // Walked top to bottom, stopping at the first matching rung per change. This control
 // flow mirrors skill/classify.md verbatim; keep the two in sync.
 
-import type { Idl, IdlField, IdlType } from "./layout.ts";
+import { typeLabel, type Idl, type IdlField, type IdlType } from "./layout.ts";
 import { detectModel, type DetectOptions, type ModelResult } from "./detect-model.ts";
 
 export type Category =
@@ -31,9 +31,9 @@ export interface DiffResult {
 }
 
 function typeKey(t: IdlType | undefined): string {
-  if (t === undefined) return "";
-  if (typeof t === "string") return t;
-  return JSON.stringify(t);
+  // Normalize via typeLabel so spec differences across Anchor versions
+  // (e.g. { defined: "X" } vs { defined: { name: "X" } }) compare equal.
+  return t === undefined ? "" : typeLabel(t);
 }
 
 function structFields(idl: Idl, name: string): IdlField[] {
@@ -50,7 +50,25 @@ function discriminator(idl: Idl, name: string): string {
 function classifyAccount(before: Idl, after: Idl, account: string): Change[] {
   const changes: Change[] = [];
 
-  // R6 first at the account level: discriminator / account identity change is UNSAFE.
+  const inBefore = before.accounts?.some((a) => a.name === account) ?? false;
+  const inAfter = after.accounts?.some((a) => a.name === account) ?? false;
+
+  // Adding a new account is storage-safe: no existing data to corrupt.
+  if (!inBefore) return changes;
+
+  // Removing an account orphans its on-chain data — existing accounts become unreadable.
+  if (!inAfter) {
+    changes.push({
+      category: "UNSAFE",
+      rung: "R6",
+      account,
+      field: null,
+      reason: "account removed — existing accounts become unreadable",
+    });
+    return changes;
+  }
+
+  // R6 at the account level: discriminator / account identity change is UNSAFE.
   if (discriminator(before, account) !== discriminator(after, account)) {
     changes.push({
       category: "UNSAFE",
@@ -154,7 +172,16 @@ function classifyInstructions(before: Idl, after: Idl): Change[] {
 
   for (const bi of before.instructions ?? []) {
     const ai = afterIx.get(bi.name);
-    if (!ai) continue; // removed instruction: old clients calling it already break; covered by name absence
+    if (!ai) {
+      // Removed instruction: old clients calling it fail — a breaking client change.
+      changes.push({
+        category: "CLIENT-BREAKING",
+        rung: "R7",
+        instruction: bi.name,
+        reason: "instruction removed",
+      });
+      continue;
+    }
     const bArgs = bi.args ?? [];
     const aArgs = ai.args ?? [];
 
@@ -221,6 +248,19 @@ function classifyErrors(before: Idl, after: Idl): Change[] {
         rung: "R8",
         error: be.name,
         reason: "error variants reordered — codes shift",
+      });
+    }
+  });
+  // Added variants: appending at the end is safe, but inserting before any
+  // existing variant shifts every subsequent code. Flag inserts, not appends.
+  const lastSurvivorIdx = aErrors.reduce((acc, e, i) => (bNames.has(e.name) ? i : acc), -1);
+  aErrors.forEach((ae, i) => {
+    if (!bNames.has(ae.name) && i < lastSurvivorIdx) {
+      changes.push({
+        category: "ABI-BREAKING",
+        rung: "R8",
+        error: ae.name,
+        reason: "error variant inserted before existing variants — codes shift",
       });
     }
   });

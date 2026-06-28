@@ -1,0 +1,60 @@
+{
+  "address": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
+  "metadata": {
+    "name": "amm_v3",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [],
+  "accounts": [
+    {
+      "name": "AmmConfig",
+      "discriminator": [
+        218,
+        244,
+        33,
+        104,
+        203,
+        203,
+        43,
+        111
+      ]
+    }
+  ],
+  "events": [],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "TooEarly",
+      "msg": "TooEarly"
+    },
+    {
+      "code": 6001,
+      "name": "LOK",
+      "msg": "LOK"
+    },
+    {
+      "code": 6002,
+      "name": "NotApproved",
+      "msg": "NotApproved"
+    }
+  ],
+  "types": [
+    {
+      "name": "AmmConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          }
+        ]
+      }
+    }
+  ]
+}

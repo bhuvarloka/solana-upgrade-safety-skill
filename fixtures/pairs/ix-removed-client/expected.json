@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "category": "CLIENT-BREAKING",
+      "rung": "R7",
+      "instruction": "close_position"
+    }
+  ],
+  "verdict": "COORDINATE"
+}

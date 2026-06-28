@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "category": "ABI-BREAKING",
+      "rung": "R8",
+      "error": "TooEarly"
+    }
+  ],
+  "verdict": "COORDINATE"
+}
