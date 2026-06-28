@@ -23,13 +23,15 @@ Solana keeps account data as raw Borsh bytes in a fixed field order, and deploye
 
 Run the bundled engine — it's the source of truth. Never hand-classify.
 
-**Never pass `--out` until the developer asks for the migration.** A question ("is it safe?", "diff these") is answered from the verdict alone — writing files they didn't request is the #1 way this skill annoys people.
+**Never pass `--out` (even to a temporary directory) until the developer asks for the migration.** A question ("is it safe?", "diff these") is answered from the verdict and breaking change details alone — writing files they didn't request is the #1 way this skill annoys people.
 
-**1. Diagnose (no files).** Run without `--out` to get just the verdict:
+**1. Diagnose (no files).** To get the verdict and the breaking change details without writing any files to disk, run the engine with the `--json` option:
 
 ```
-pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--assume <model>]
+pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> --json [--assume <model>]
 ```
+
+This prints a single JSON line to stdout: `{ "verdict": ..., "artifacts": { "report.md": "..." } }` and writes nothing to disk. Parse this JSON to get the verdict and extract the breaking change bullets from `artifacts["report.md"]` for your response. (Alternatively, run without `--json` or `--out` to get just the verdict string `verdict: ...`.)
 
 `<skill-dir>` is this file's directory (e.g. `~/.claude/skills/upgrade-safety`); use absolute paths for the IDLs. Exit code: **1 = MIGRATE** (CI-gateable), **0** = SAFE/COORDINATE/REFUSE, **2** = bad input (report the error, not a verdict).
 
