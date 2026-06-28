@@ -2,8 +2,3 @@ node_modules/
 dist/
 *.tsbuildinfo
 .DS_Store
-
-# local working notes — kept on disk, out of the repo
-CLAUDE.md
-upgrade-safety-skill-plan.md
-upgrade-safety-claude-code-prompt.md
