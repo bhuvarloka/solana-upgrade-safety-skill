@@ -1,6 +1,6 @@
 ---
 name: upgrade-safety
-description: Analyzes whether an Anchor program upgrade will corrupt already-deployed on-chain accounts, then generates the migration. Compares two IDL versions (or evaluates a proposed change before it lands), classifies each change into five compatibility categories behind a serialization-model gate, and emits migration.rs, migration.ts, a regression test, a compatibility report, and a release checklist. Use when the user asks "is this Anchor upgrade safe", "will this corrupt accounts", "can I add/remove/reorder/retype a field in this account", "diff these IDLs", "account layout compatibility", "schema/account migration", "Borsh layout change", or mentions versioning an Anchor account struct before deploying.
+description: Tells you whether an Anchor program upgrade will corrupt already-deployed on-chain accounts. Compares two IDL versions (or evaluates a proposed change before it lands) and returns a verdict; generates the migration (migration.rs, migration.ts, regression test, report, checklist) only when asked. Use when the user asks "is this Anchor upgrade safe", "will this corrupt accounts", "can I add/remove/reorder/retype a field in this account", "diff these IDLs", "account layout compatibility", "schema/account migration", "Borsh layout change", or mentions versioning an Anchor account struct before deploying.
 user-invocable: true
 ---
 
@@ -22,6 +22,8 @@ Solana keeps account data as raw Borsh bytes in a fixed field order, and deploye
 ## Procedure
 
 Run the bundled engine — it's the source of truth. Never hand-classify.
+
+**Never pass `--out` until the developer asks for the migration.** A question ("is it safe?", "diff these") is answered from the verdict alone — writing files they didn't request is the #1 way this skill annoys people.
 
 **1. Diagnose (no files).** Run without `--out` to get just the verdict:
 
@@ -47,10 +49,11 @@ Terse. The developer wants the answer, not a write-up. Hard rules:
 
 - **SAFE** → exactly one line: `✅ Safe — in-place upgrade won't corrupt accounts.` Nothing else.
 - **Otherwise** → the verdict line, then **one bullet per breaking change** (`Account.field: u32→u64 — corrupts every existing account`). Cap at 5 bullets; if more, show the worst 5 and `…and N more`.
-- Then one closing line: `Want the migration? I'll generate it.` Stop there.
-- Never paste `report.md`, never recite the checklist, never explain byte offsets or open `migration.rs` unless asked. No preamble ("I'll analyze…"), no recap of what you ran.
+- Then **the fix, in one line** — the safe alternative or the migration path (`Fix: keep trade_fee_rate as u32, or version the struct and migrate existing accounts.`). This is the deliverable; the developer can act on it without any files.
+- End with a low-key offer of the scaffold as a fallback: `I can write the migration scaffold to a folder if you want it.` Don't push it. Stop there.
+- Never paste `report.md`, never recite the checklist or rollout steps, never list generated files, never explain byte offsets or open `migration.rs` unless asked. No preamble ("I'll analyze…"), no recap of what you ran.
 
-Output ceiling for the whole reply: ~7 lines. If you're writing more, you're touring.
+Output ceiling: verdict + the breaking changes + one fix line + the offer. ~8 lines max. More than that is touring.
 
 ## Command
 
