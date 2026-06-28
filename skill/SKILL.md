@@ -35,7 +35,7 @@ pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--assum
 
 **2. Report in chat** (see below). Stop here unless the developer wants the migration.
 
-**3. Generate (only when asked).** Re-run with `--out <dir>` to write `report.md`, `release-checklist.md`, and — when MIGRATE — `migration.rs` / `migration.ts` / `regression.test.ts`. See [generate-migration.md](generate-migration.md).
+**3. Generate (only when asked).** Re-run with `--out <dir>`, where `<dir>` is an **absolute path inside the developer's project** (e.g. `<cwd>/migration`), not a bare relative name — the engine runs from its own directory, so a relative `--out` lands in the wrong place. Then **open the generated `migration.rs` with your file/Read tool** so it's visible in the editor; don't rely on the file tree refreshing. Tell the developer the absolute path you wrote to. See [generate-migration.md](generate-migration.md).
 
 No `after` yet? See [propose-mode.md](propose-mode.md): synthesize it from the proposed edit, run the ladders, rewrite an unsafe change into a safe one.
 
