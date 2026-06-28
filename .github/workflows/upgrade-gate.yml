@@ -1,0 +1,37 @@
+# Fails the PR if a committed Anchor IDL change would corrupt already-deployed accounts
+# without a migration. Compares the IDL at the previous tag against the PR's version.
+name: upgrade-gate
+
+on:
+  pull_request:
+    paths:
+      - "**/*.json" # narrow this to your IDL path(s), e.g. "target/idl/*.json"
+  workflow_dispatch:
+    inputs:
+      idl:
+        description: Path to the committed IDL to gate
+        required: true
+
+# Point this at your program's IDL. The gate compares it against the same path at the
+# previous git tag and fails on an un-migrated, account-corrupting change.
+env:
+  IDL: fixtures/pairs/retyped-migration/after.json
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need full history + tags to resolve the previous tag
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+          cache-dependency-path: engine/pnpm-lock.yaml
+      - run: pnpm -C engine install --frozen-lockfile
+      - name: Gate the IDL upgrade
+        env:
+          IDL: ${{ github.event.inputs.idl || env.IDL }}
+        run: bash .github/upgrade-gate.sh

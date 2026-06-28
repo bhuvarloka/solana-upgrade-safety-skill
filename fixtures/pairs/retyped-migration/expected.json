@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "category": "MIGRATION-REQUIRED",
+      "rung": "R4",
+      "account": "AmmConfig",
+      "field": "trade_fee_rate"
+    }
+  ],
+  "verdict": "MIGRATE"
+}

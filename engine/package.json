@@ -1,0 +1,26 @@
+{
+  "name": "upgrade-safety-engine",
+  "version": "0.1.0",
+  "description": "Engine for upgrade-safety-skill: IDL diff, compatibility classification, and migration codegen.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check-upgrade": "tsx src/cli.ts",
+    "benchmark": "tsx ../benchmark/run.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  }
+}

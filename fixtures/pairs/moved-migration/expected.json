@@ -1,0 +1,17 @@
+{
+  "changes": [
+    {
+      "category": "MIGRATION-REQUIRED",
+      "rung": "R3",
+      "account": "AmmConfig",
+      "field": "bump"
+    },
+    {
+      "category": "MIGRATION-REQUIRED",
+      "rung": "R3",
+      "account": "AmmConfig",
+      "field": "index"
+    }
+  ],
+  "verdict": "MIGRATE"
+}

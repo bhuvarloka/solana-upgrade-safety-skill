@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "category": "UNSAFE",
+      "rung": "R6",
+      "account": "AmmConfig",
+      "field": null
+    }
+  ],
+  "verdict": "MIGRATE"
+}

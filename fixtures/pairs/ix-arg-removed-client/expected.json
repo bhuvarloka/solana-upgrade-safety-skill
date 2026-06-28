@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "category": "CLIENT-BREAKING",
+      "rung": "R7",
+      "instruction": "collect_fund_fee",
+      "arg": "amount_1_requested"
+    }
+  ],
+  "verdict": "COORDINATE"
+}

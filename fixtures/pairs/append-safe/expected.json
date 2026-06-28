@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "category": "STORAGE-SAFE",
+      "rung": "R1",
+      "account": "AmmConfig",
+      "field": "new_flag"
+    }
+  ],
+  "verdict": "SAFE"
+}

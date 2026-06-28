@@ -1,0 +1,15 @@
+{
+  "changes": [
+    {
+      "category": "ABI-BREAKING",
+      "rung": "R8",
+      "error": "LOK"
+    },
+    {
+      "category": "ABI-BREAKING",
+      "rung": "R8",
+      "error": "InvalidUpdateConfigFlag"
+    }
+  ],
+  "verdict": "COORDINATE"
+}

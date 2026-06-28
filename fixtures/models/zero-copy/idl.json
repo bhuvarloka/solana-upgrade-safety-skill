@@ -1,0 +1,58 @@
+{
+  "address": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
+  "metadata": {
+    "name": "amm_v3",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Anchor client and source for Raydium concentrated liquidity AMM"
+  },
+  "instructions": [],
+  "accounts": [
+    null
+  ],
+  "types": [
+    {
+      "name": "Observation",
+      "docs": [
+        "The element of observations in ObservationState"
+      ],
+      "serialization": "bytemuckunsafe",
+      "repr": {
+        "kind": "c",
+        "packed": true
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "block_timestamp",
+            "docs": [
+              "The block timestamp of the observation"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "tick_cumulative",
+            "docs": [
+              "the cumulative of tick during the duration time"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "padding",
+            "docs": [
+              "padding for feature update"
+            ],
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,377 @@
+{
+  "address": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
+  "metadata": {
+    "name": "amm_v3",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Anchor client and source for Raydium concentrated liquidity AMM"
+  },
+  "instructions": [
+    {
+      "name": "collect_fund_fee",
+      "docs": [
+        "Collect the fund fee accrued to the pool",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context of accounts",
+        "* `amount_0_requested` - The maximum amount of token_0 to send, can be 0 to collect fees in only token_1",
+        "* `amount_1_requested` - The maximum amount of token_1 to send, can be 0 to collect fees in only token_0",
+        ""
+      ],
+      "discriminator": [
+        167,
+        138,
+        78,
+        149,
+        223,
+        194,
+        6,
+        126
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": [
+            "Only admin or fund_owner can collect fee now"
+          ],
+          "signer": true
+        },
+        {
+          "name": "pool_state",
+          "docs": [
+            "Pool state stores accumulated protocol fee amount"
+          ],
+          "writable": true
+        },
+        {
+          "name": "amm_config",
+          "docs": [
+            "Amm config account stores fund_owner"
+          ]
+        },
+        {
+          "name": "token_vault_0",
+          "docs": [
+            "The address that holds pool tokens for token_0"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_vault_1",
+          "docs": [
+            "The address that holds pool tokens for token_1"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault_0_mint",
+          "docs": [
+            "The mint of token vault 0"
+          ]
+        },
+        {
+          "name": "vault_1_mint",
+          "docs": [
+            "The mint of token vault 1"
+          ]
+        },
+        {
+          "name": "recipient_token_account_0",
+          "docs": [
+            "The address that receives the collected token_0 protocol fees"
+          ],
+          "writable": true
+        },
+        {
+          "name": "recipient_token_account_1",
+          "docs": [
+            "The address that receives the collected token_1 protocol fees"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "The SPL program to perform token transfers"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_program_2022",
+          "docs": [
+            "The SPL program 2022 to perform token transfers"
+          ],
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_0_requested",
+          "type": "u64"
+        },
+        {
+          "name": "amount_1_requested",
+          "type": "u64"
+        },
+        {
+          "name": "extra_flag",
+          "type": "u8"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AmmConfig",
+      "discriminator": [
+        218,
+        244,
+        33,
+        104,
+        203,
+        203,
+        43,
+        111
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "CollectPersonalFeeEvent",
+      "discriminator": [
+        166,
+        174,
+        105,
+        192,
+        81,
+        161,
+        83,
+        105
+      ]
+    },
+    {
+      "name": "CollectProtocolFeeEvent",
+      "discriminator": [
+        206,
+        87,
+        17,
+        79,
+        45,
+        41,
+        213,
+        61
+      ]
+    },
+    {
+      "name": "ConfigChangeEvent",
+      "discriminator": [
+        247,
+        189,
+        7,
+        119,
+        106,
+        112,
+        95,
+        151
+      ]
+    },
+    {
+      "name": "CreatePersonalPositionEvent",
+      "discriminator": [
+        100,
+        30,
+        87,
+        249,
+        196,
+        223,
+        154,
+        206
+      ]
+    },
+    {
+      "name": "DecreaseLiquidityEvent",
+      "discriminator": [
+        58,
+        222,
+        86,
+        58,
+        68,
+        50,
+        85,
+        56
+      ]
+    },
+    {
+      "name": "IncreaseLiquidityEvent",
+      "discriminator": [
+        49,
+        79,
+        105,
+        212,
+        32,
+        34,
+        30,
+        84
+      ]
+    },
+    {
+      "name": "LiquidityCalculateEvent",
+      "discriminator": [
+        237,
+        112,
+        148,
+        230,
+        57,
+        84,
+        180,
+        162
+      ]
+    },
+    {
+      "name": "LiquidityChangeEvent",
+      "discriminator": [
+        126,
+        240,
+        175,
+        206,
+        158,
+        88,
+        153,
+        107
+      ]
+    },
+    {
+      "name": "PoolCreatedEvent",
+      "discriminator": [
+        25,
+        94,
+        75,
+        47,
+        112,
+        99,
+        53,
+        63
+      ]
+    },
+    {
+      "name": "SwapEvent",
+      "discriminator": [
+        64,
+        198,
+        205,
+        232,
+        38,
+        8,
+        113,
+        226
+      ]
+    },
+    {
+      "name": "UpdateRewardInfosEvent",
+      "discriminator": [
+        109,
+        127,
+        186,
+        78,
+        114,
+        65,
+        37,
+        236
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "LOK",
+      "msg": "LOK"
+    },
+    {
+      "code": 6001,
+      "name": "NotApproved",
+      "msg": "Not approved"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidUpdateConfigFlag",
+      "msg": "invalid update amm config flag"
+    }
+  ],
+  "types": [
+    {
+      "name": "AmmConfig",
+      "docs": [
+        "Holds the current owner of the factory"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump to identify PDA"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "index",
+            "type": "u16"
+          },
+          {
+            "name": "owner",
+            "docs": [
+              "Address of the protocol owner"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "protocol_fee_rate",
+            "docs": [
+              "The protocol fee"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "trade_fee_rate",
+            "docs": [
+              "The trade fee, denominated in hundredths of a bip (10^-6)"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "tick_spacing",
+            "docs": [
+              "The tick spacing"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "fund_fee_rate",
+            "docs": [
+              "The fund fee, denominated in hundredths of a bip (10^-6)"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "padding_u32",
+            "type": "u32"
+          },
+          {
+            "name": "fund_owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

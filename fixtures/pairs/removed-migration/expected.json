@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "category": "MIGRATION-REQUIRED",
+      "rung": "R5",
+      "account": "AmmConfig",
+      "field": "tick_spacing"
+    }
+  ],
+  "verdict": "MIGRATE"
+}

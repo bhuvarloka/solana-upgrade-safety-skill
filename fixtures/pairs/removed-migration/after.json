@@ -1,0 +1,240 @@
+{
+  "address": "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
+  "metadata": {
+    "name": "amm_v3",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Anchor client and source for Raydium concentrated liquidity AMM"
+  },
+  "instructions": [],
+  "accounts": [
+    {
+      "name": "AmmConfig",
+      "discriminator": [
+        218,
+        244,
+        33,
+        104,
+        203,
+        203,
+        43,
+        111
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "CollectPersonalFeeEvent",
+      "discriminator": [
+        166,
+        174,
+        105,
+        192,
+        81,
+        161,
+        83,
+        105
+      ]
+    },
+    {
+      "name": "CollectProtocolFeeEvent",
+      "discriminator": [
+        206,
+        87,
+        17,
+        79,
+        45,
+        41,
+        213,
+        61
+      ]
+    },
+    {
+      "name": "ConfigChangeEvent",
+      "discriminator": [
+        247,
+        189,
+        7,
+        119,
+        106,
+        112,
+        95,
+        151
+      ]
+    },
+    {
+      "name": "CreatePersonalPositionEvent",
+      "discriminator": [
+        100,
+        30,
+        87,
+        249,
+        196,
+        223,
+        154,
+        206
+      ]
+    },
+    {
+      "name": "DecreaseLiquidityEvent",
+      "discriminator": [
+        58,
+        222,
+        86,
+        58,
+        68,
+        50,
+        85,
+        56
+      ]
+    },
+    {
+      "name": "IncreaseLiquidityEvent",
+      "discriminator": [
+        49,
+        79,
+        105,
+        212,
+        32,
+        34,
+        30,
+        84
+      ]
+    },
+    {
+      "name": "LiquidityCalculateEvent",
+      "discriminator": [
+        237,
+        112,
+        148,
+        230,
+        57,
+        84,
+        180,
+        162
+      ]
+    },
+    {
+      "name": "LiquidityChangeEvent",
+      "discriminator": [
+        126,
+        240,
+        175,
+        206,
+        158,
+        88,
+        153,
+        107
+      ]
+    },
+    {
+      "name": "PoolCreatedEvent",
+      "discriminator": [
+        25,
+        94,
+        75,
+        47,
+        112,
+        99,
+        53,
+        63
+      ]
+    },
+    {
+      "name": "SwapEvent",
+      "discriminator": [
+        64,
+        198,
+        205,
+        232,
+        38,
+        8,
+        113,
+        226
+      ]
+    },
+    {
+      "name": "UpdateRewardInfosEvent",
+      "discriminator": [
+        109,
+        127,
+        186,
+        78,
+        114,
+        65,
+        37,
+        236
+      ]
+    }
+  ],
+  "errors": [],
+  "types": [
+    {
+      "name": "AmmConfig",
+      "docs": [
+        "Holds the current owner of the factory"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump to identify PDA"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "index",
+            "type": "u16"
+          },
+          {
+            "name": "owner",
+            "docs": [
+              "Address of the protocol owner"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "protocol_fee_rate",
+            "docs": [
+              "The protocol fee"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "trade_fee_rate",
+            "docs": [
+              "The trade fee, denominated in hundredths of a bip (10^-6)"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "fund_fee_rate",
+            "docs": [
+              "The fund fee, denominated in hundredths of a bip (10^-6)"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "padding_u32",
+            "type": "u32"
+          },
+          {
+            "name": "fund_owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u64",
+                3
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
