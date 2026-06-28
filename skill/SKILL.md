@@ -32,13 +32,17 @@ Walk these in order. Each is a deterministic decision ladder — ordered conditi
 
 ## The engine
 
-Diagnosis and generation are mechanical, not vibes — they run in TypeScript under `engine/`, and the round-trip proof uses `@coral-xyz/anchor`'s `BorshAccountsCoder` to prove the verdict in real bytes. The ladders above are identical to `engine/src/detect-model.ts` and `engine/src/diff.ts`; if you change one, change both.
+Diagnosis and generation are mechanical, not vibes — they run in TypeScript under this skill's `engine/`, and the round-trip proof uses `@coral-xyz/anchor`'s `BorshAccountsCoder` to prove the verdict in real bytes. The ladders above are identical to `engine/src/detect-model.ts` and `engine/src/diff.ts`; if you change one, change both.
+
+**Always run the engine — never hand-classify.** The bundled engine is the source of truth; eyeballing the diff defeats the point of a deterministic verdict. The engine lives in the `engine/` directory next to this file. Run it with `pnpm -C` pointed at that directory and **absolute** paths for the IDLs and `--out`, so it works regardless of your current directory:
 
 ```
-pnpm run check-upgrade <before.json> <after.json> --out <dir> [--assume <model>]
+pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> --out <dir> [--assume <model>]
 ```
 
-Exit 1 on MIGRATE (CI-gateable), 0 otherwise.
+`<skill-dir>` is the directory containing this SKILL.md (e.g. `~/.claude/skills/upgrade-safety`). Exit code: **1 on MIGRATE** (CI-gateable), **0** on SAFE/COORDINATE/REFUSE, **2** on bad input (report the error, do not treat as a verdict).
+
+If `engine/node_modules` is missing, run `pnpm -C <skill-dir>/engine install` once first. If the engine is absent entirely, tell the user to reinstall the skill and stop — do not fall back to eyeballing the diff.
 
 ## Command
 

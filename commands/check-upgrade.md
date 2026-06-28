@@ -9,8 +9,10 @@ Run the upgrade-safety analysis on a pair of Anchor IDLs (or a proposed change) 
 ## Usage
 
 ```
-pnpm run check-upgrade <before.json> <after.json> --out <dir> [--assume <model>]
+pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> --out <dir> [--assume <model>]
 ```
+
+`<skill-dir>` is the installed skill directory (e.g. `~/.claude/skills/upgrade-safety`). Use absolute paths for the IDLs and `--out` so it runs from any working directory.
 
 - `<before.json>` — the currently-deployed IDL (or `anchor idl fetch <program-id>`).
 - `<after.json>` — the new/proposed IDL.
