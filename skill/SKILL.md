@@ -33,9 +33,11 @@ pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--assum
 
 `<skill-dir>` is this file's directory (e.g. `~/.claude/skills/upgrade-safety`); use absolute paths for the IDLs. Exit code: **1 = MIGRATE** (CI-gateable), **0** = SAFE/COORDINATE/REFUSE, **2** = bad input (report the error, not a verdict).
 
-**2. Report in chat** (see below). Stop here unless the developer wants the migration.
+**2. Report in chat** (see below), ending by asking what they want done. Stop and wait.
 
-**3. Generate (only when asked).** Re-run with `--json` (not `--out`) to get the artifacts on stdout:
+**3a. "Rewrite it safe"** → don't generate migration files. Propose the safe edit (see [propose-mode.md](propose-mode.md): keep the type, append instead of insert, version the struct) and, if they want, apply it to their source. No migration needed when the change itself becomes storage-safe.
+
+**3b. "Write the migration"** → re-run with `--json` (not `--out`) to get the artifacts on stdout:
 
 ```
 pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> --json
@@ -64,7 +66,7 @@ Terse. The developer wants the answer, not a write-up. Hard rules:
 - **SAFE** → exactly one line: `✅ Safe — in-place upgrade won't corrupt accounts.` Nothing else.
 - **Otherwise** → the verdict line, then **one bullet per breaking change** (`Account.field: u32→u64 — corrupts every existing account`). Cap at 5 bullets; if more, show the worst 5 and `…and N more`.
 - Then **the fix, in one line** — the safe alternative or the migration path (`Fix: keep trade_fee_rate as u32, or version the struct and migrate existing accounts.`). This is the deliverable; the developer can act on it without any files.
-- End with a low-key offer of the scaffold as a fallback: `I can write the migration scaffold to a folder if you want it.` Don't push it. Stop there.
+- End by **asking what they want done**, not by announcing files or a path: `Want me to make this upgrade safe — rewrite the change so it can't corrupt anything, or write the migration files to fix it the hard way?` Wait for their answer. Only when they say yes do you generate (step 3); only then do files exist or get mentioned.
 - Never paste `report.md`, never recite the checklist or rollout steps, never list generated files, never explain byte offsets or open `migration.rs` unless asked. No preamble ("I'll analyze…"), no recap of what you ran.
 
 Output ceiling: verdict + the breaking changes + one fix line + the offer. ~8 lines max. More than that is touring.
