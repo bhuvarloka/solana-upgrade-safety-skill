@@ -1,9 +1,7 @@
-// Generated migration scaffold for `AmmConfig`.
-// Review and complete the field copy before running on mainnet.
+// TODO: complete the field copy in migrate() before mainnet.
 use anchor_lang::prelude::*;
 
-// Old layout (already on chain).
-#[account]
+#[derive(AnchorSerialize, AnchorDeserialize, Default)]
 pub struct AmmConfigV1 {
     pub bump: u8,
     pub index: u16,
@@ -17,8 +15,7 @@ pub struct AmmConfigV1 {
     pub padding: [u64; 3],
 }
 
-// New layout (target).
-#[account]
+#[derive(AnchorSerialize, AnchorDeserialize, Default)]
 pub struct AmmConfigV2 {
     pub bump: u8,
     pub index: u16,
@@ -34,13 +31,8 @@ pub struct AmmConfigV2 {
 
 #[derive(Accounts)]
 pub struct Migrate<'info> {
-    #[account(
-        mut,
-        realloc = 8 + std::mem::size_of::<AmmConfigV2>(),
-        realloc::payer = payer,
-        realloc::zero = false,
-    )]
-    /// CHECK: deserialized manually as AmmConfigV1, rewritten as AmmConfigV2.
+    #[account(mut)]
+    /// CHECK: deserialized as AmmConfigV1, rewritten as AmmConfigV2.
     pub account: AccountInfo<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -49,16 +41,40 @@ pub struct Migrate<'info> {
 
 pub fn migrate(ctx: Context<Migrate>) -> Result<()> {
     let info = &ctx.accounts.account;
-    let old = AmmConfigV1::try_deserialize(&mut &info.try_borrow_data()?[..])?;
 
-    // TODO: map every old field into the new layout. Defaults are placeholders.
+    // Keep the original discriminator — the program still reads this as `AmmConfig`.
+    let disc: [u8; 8] = info.try_borrow_data()?[..8].try_into().unwrap();
+    let old = AmmConfigV1::deserialize(&mut &info.try_borrow_data()?[8..])?;
+
     let new = AmmConfigV2 {
-        // ..copy matching fields from `old`, set new/changed fields explicitly..
+        // TODO: copy matching fields from `old`; set new/changed fields explicitly.
         ..Default::default()
     };
 
+    let body = new.try_to_vec()?;
+    let needed = 8 + body.len();
+    if needed != info.data_len() {
+        let rent = Rent::get()?;
+        let min = rent.minimum_balance(needed);
+        let cur = info.lamports();
+        if min > cur {
+            anchor_lang::system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    anchor_lang::system_program::Transfer {
+                        from: ctx.accounts.payer.to_account_info(),
+                        to: info.to_account_info(),
+                    },
+                ),
+                min - cur,
+            )?;
+        }
+        info.realloc(needed, false)?;
+    }
+
     let mut data = info.try_borrow_mut_data()?;
-    new.try_serialize(&mut &mut data[..])?;
+    data[..8].copy_from_slice(&disc);
+    data[8..needed].copy_from_slice(&body);
     let _ = old;
     Ok(())
 }

@@ -118,23 +118,17 @@ function rustStruct(name: string, fields: IdlField[]): string {
 function migrationRs(account: string, before: Idl, after: Idl): string {
   const v1 = rustStruct(`${account}V1`, fieldsOf(before, account));
   const v2 = rustStruct(`${account}V2`, fieldsOf(after, account));
-  return `// Generated migration scaffold for \`${account}\`.
-// Review and complete the field copy before running on mainnet.
+  return `// TODO: complete the field copy in migrate() before mainnet.
 use anchor_lang::prelude::*;
 
-// Old layout (already on chain).
 ${v1}
 
-// New layout (target).
 ${v2}
 
 #[derive(Accounts)]
 pub struct Migrate<'info> {
-    // No compile-time realloc: with variable-length fields (String/Vec) the final size
-    // isn't known until serialization. We realloc by hand in migrate() from the actual
-    // Borsh length. realloc::zero is irrelevant here for the same reason.
     #[account(mut)]
-    /// CHECK: deserialized manually as ${account}V1, rewritten as ${account}V2.
+    /// CHECK: deserialized as ${account}V1, rewritten as ${account}V2.
     pub account: AccountInfo<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -144,19 +138,15 @@ pub struct Migrate<'info> {
 pub fn migrate(ctx: Context<Migrate>) -> Result<()> {
     let info = &ctx.accounts.account;
 
-    // Preserve the original 8-byte Anchor discriminator; the main program still reads
-    // this account as \`${account}\`, so the discriminator must not change.
+    // Keep the original discriminator — the program still reads this as \`${account}\`.
     let disc: [u8; 8] = info.try_borrow_data()?[..8].try_into().unwrap();
     let old = ${account}V1::deserialize(&mut &info.try_borrow_data()?[8..])?;
 
-    // TODO: map every old field into the new layout. Defaults are placeholders.
     let new = ${account}V2 {
-        // ..copy matching fields from \`old\`, set new/changed fields explicitly..
+        // TODO: copy matching fields from \`old\`; set new/changed fields explicitly.
         ..Default::default()
     };
 
-    // Size from the actual serialized bytes (Borsh has no padding), then resize +
-    // top up rent before writing.
     let body = new.try_to_vec()?;
     let needed = 8 + body.len();
     if needed != info.data_len() {
@@ -188,27 +178,20 @@ pub fn migrate(ctx: Context<Migrate>) -> Result<()> {
 }
 
 function migrationTs(account: string): string {
-  return `// Generated client-side migration call for \`${account}\`.
-// Targets @solana/kit; wire in your program client and signer.
-import { type Address, type TransactionSigner } from "@solana/kit";
+  return `import { type Address, type TransactionSigner } from "@solana/kit";
 
 export async function migrate${account}(params: {
   account: Address;
   payer: TransactionSigner;
-  // ..program client / rpc..
 }): Promise<void> {
   // TODO: build and send the \`migrate\` instruction for ${account}.
-  // 1. fetch the account at the V1 layout
-  // 2. call the program's migrate instruction (reallocs + rewrites as V2)
-  // 3. confirm and re-fetch at the V2 layout to verify
   throw new Error("migrate${account}: fill in the program client call");
 }
 `;
 }
 
 function regressionTest(account: string, before: Idl, after: Idl): string {
-  return `// Generated regression test for the \`${account}\` migration.
-// Proves an account written at the OLD layout reads correctly after migration.
+  return `// Proves a \`${account}\` account at the old layout survives migration.
 import { describe, it, expect } from "vitest";
 import anchor from "@coral-xyz/anchor";
 
@@ -222,14 +205,11 @@ describe("${account} migration", () => {
     const oldCoder = new BorshAccountsCoder(OLD_IDL as never);
     const newCoder = new BorshAccountsCoder(NEW_IDL as never);
 
-    // 1. write a value at the OLD layout
     const value = { /* TODO: fill realistic field values */ };
     const oldBytes = await oldCoder.encode("${account}", value);
 
-    // 2. apply the migration (run your on-chain migrate, or transform bytes here)
     const migrated = oldBytes; // TODO: replace with post-migration account bytes
 
-    // 3. assert the NEW layout decodes the migrated account without corruption
     const decoded = newCoder.decodeUnchecked("${account}", migrated);
     expect(decoded).toBeDefined();
     // TODO: assert each field equals the expected migrated value

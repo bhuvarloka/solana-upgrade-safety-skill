@@ -1,5 +1,4 @@
-// Generated regression test for the `AmmConfig` migration.
-// Proves an account written at the OLD layout reads correctly after migration.
+// Proves a `AmmConfig` account at the old layout survives migration.
 import { describe, it, expect } from "vitest";
 import anchor from "@coral-xyz/anchor";
 
@@ -211,14 +210,11 @@ describe("AmmConfig migration", () => {
     const oldCoder = new BorshAccountsCoder(OLD_IDL as never);
     const newCoder = new BorshAccountsCoder(NEW_IDL as never);
 
-    // 1. write a value at the OLD layout
     const value = { /* TODO: fill realistic field values */ };
     const oldBytes = await oldCoder.encode("AmmConfig", value);
 
-    // 2. apply the migration (run your on-chain migrate, or transform bytes here)
     const migrated = oldBytes; // TODO: replace with post-migration account bytes
 
-    // 3. assert the NEW layout decodes the migrated account without corruption
     const decoded = newCoder.decodeUnchecked("AmmConfig", migrated);
     expect(decoded).toBeDefined();
     // TODO: assert each field equals the expected migrated value
