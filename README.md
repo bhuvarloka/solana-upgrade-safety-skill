@@ -59,26 +59,19 @@ Move a field, widen a `u64`, delete one — same story. Anchor ships tools to mi
 
 ## What it does
 
-One command. Two IDLs in, a verdict and the migration out.
+You changed your program. This checks whether that change quietly breaks the data already saved for your users.
 
 ```bash
-cd engine && pnpm run check-upgrade before.json after.json --json
-# exit 1 = this corrupts data. wire it into CI and sleep.
-# add --out ./out to write the migration files instead of just the verdict.
+cd engine && pnpm run check-upgrade before.json after.json
 ```
 
-Real output, on a moved field in Raydium's `AmmConfig`:
+It compares the before and after and tells you whether the saved accounts still line up.
 
 ```
 verdict: MIGRATE
 ```
 
-The per-field breakdown rides along in the JSON (or lands in `./out/report.md` with `--out`):
-
-```
-| MIGRATION-REQUIRED | AmmConfig.bump  | moved (0 → 1) — offsets shift |
-| MIGRATION-REQUIRED | AmmConfig.index | moved (1 → 0) — offsets shift |
-```
+**MIGRATE** means the change scrambles existing accounts. It lists the ones affected so you can sort them out before you ship.
 
 ## The Ladder
 
@@ -136,7 +129,7 @@ The same bytes always produce the same answer. The code in [`engine/`](engine/) 
 
 ## Does it actually work
 
-A verdict is just talk until the bytes agree. So the test does the cruel thing: writes an account the old way, reads it the new way, checks what falls out.
+A verdict is just talk until you prove it. So the test does the mean thing: it saves an account the old way, opens it the new way, and watches what breaks.
 
 ```
 ✓ appended field   → old data survives, intact
@@ -144,46 +137,34 @@ A verdict is just talk until the bytes agree. So the test does the cruel thing: 
 ✓ widened u8→u64   → the field after it gets eaten
 ```
 
-Real `BorshAccountsCoder`, real bytes, no mocks. When it says MIGRATE, the corruption is right there in the assertion.
+It uses the same machinery your program does, on real data. When it says MIGRATE, the broken bytes are right there in the test.
 
-And the agent-vs-agent score, because the whole point is changing what the AI does:
+The same change, run through the AI with the tool and without it:
 
 |                | catches corruption | misses            |
 | -------------- | ------------------ | ----------------- |
 | with the skill | **5 / 5**          | **0**             |
 | a bare agent   | 1 / 5              | **4 silent ones** |
 
-The bare agent only notices when a _type_ visibly changes. The reorder, the deletion, the renamed discriminator — it waves them all through. Those are the ones that hurt. ([full table](benchmark/results.md))
+On its own, the AI only catches the obvious changes. The quiet ones — a field moved, a field deleted, something renamed under the hood — go straight past it, and those are the ones that corrupt accounts. ([full table](benchmark/results.md))
 
 ## FAQ
 
-**Does the IDL even know about zero-copy or hand-rolled layouts?**
-No, and pretending otherwise is how you get burned. So it checks the model _first_: plain Borsh, full analysis. Zero-copy, analyzed but flagged. Manual serialization, it refuses and says so. "I can't verify this" beats a confident wrong answer.
+**Does this work for every kind of program?**
+For the common case it checks everything. For trickier setups it takes a careful look and flags what it can't be sure about. When it can't verify something, it says so rather than guess.
 
-**Why five categories instead of safe / unsafe?**
-Because "your clients need a redeploy" and "your users lost their funds" are not the same Tuesday.
+**Why four verdicts instead of just safe or unsafe?**
+Because "your app needs an update" and "your users lost their money" are different problems, and you'll want to tell them apart.
 
-**Will the generated migration just work?**
-It's a scaffold with the field copy left to you, on purpose — it won't guess what your new field should hold. The boring part is done; the one decision only you can make is left as a `TODO`.
+**Does the migration it writes just work out of the box?**
+Almost. It handles the setup and leaves one blank — where your new field's value comes from. That part depends on your program, so you fill it in.
 
-## Run it (no install)
-
-Straight from GitHub — no clone, no setup. Any agent or shell that can run a command can run this:
-
-```bash
-npx github:bhuvarloka/solana-upgrade-safety-skill before.json after.json
-# exit 1 = corrupts data, 0 = safe, 2 = bad input
-```
-
-First run takes ~15s while it fetches the Anchor dependency; after that it's cached.
-
-## Install (optional)
-
-Prefer it local — for repeated runs, or to diff against your last git tag automatically:
+## Run it
 
 ```bash
 cd engine && pnpm install            # once
 ./check-upgrade.sh path/to/idl.json  # working tree vs latest git tag — what the CI gate runs
+# exit 1 = corrupts data, 0 = safe, 2 = bad input
 ```
 
 ### Claude Code

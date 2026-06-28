@@ -7,15 +7,15 @@ agent that honors `AGENTS.md` (Codex, Cursor, Gemini CLI, Zed, and others).
 
 A Solana account is a fixed byte layout. Reordering, inserting, removing, or widening a
 field in an account struct silently corrupts already-deployed accounts — it still compiles
-and tests still pass. Do not eyeball this. Run the checker — no install needed:
+and tests still pass. Do not eyeball this. Run the checker:
 
 ```bash
-npx github:bhuvarloka/solana-upgrade-safety-skill <old-idl.json> <new-idl.json>
+pnpm -C engine run check-upgrade <old-idl.json> <new-idl.json>
 ```
 
 Get the old IDL from the last release (e.g. `git show <tag>:path/to/idl.json > /tmp/old.json`)
-and compare it to the new one in the working tree. Inside this repo you can instead run
-`./check-upgrade.sh path/to/idl.json`, which diffs the working tree against the latest git tag.
+and compare it to the new one in the working tree. To diff the working tree against the latest
+git tag automatically, run `./check-upgrade.sh path/to/idl.json` instead.
 
 Exit codes — the entire contract:
 
