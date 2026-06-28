@@ -35,7 +35,15 @@ pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--assum
 
 **2. Report in chat** (see below). Stop here unless the developer wants the migration.
 
-**3. Generate (only when asked).** Re-run with `--out <dir>`, where `<dir>` is an **absolute path inside the developer's project** (e.g. `<cwd>/migration`), not a bare relative name — the engine runs from its own directory, so a relative `--out` lands in the wrong place. Then **open the generated `migration.rs` with your file/Read tool** so it's visible in the editor; don't rely on the file tree refreshing. Tell the developer the absolute path you wrote to. See [generate-migration.md](generate-migration.md).
+**3. Generate (only when asked).** Re-run with `--json` (not `--out`) to get the artifacts on stdout:
+
+```
+pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> --json
+```
+
+It prints one JSON line, `{ "verdict": ..., "artifacts": { "migration.rs": "...", ... } }`, and writes nothing. (`pnpm run` adds a `$ tsx …` banner line first — parse the line that starts with `{`.) **You** then write each artifact with your Write tool into the developer's project (e.g. `<cwd>/migration/migration.rs`). Files created through your tool show up in the editor immediately — the engine writing them itself does not reliably refresh the file tree, which is why generation goes through you. Open `migration.rs` after writing. See [generate-migration.md](generate-migration.md).
+
+(CI uses `--out <dir>` to write directly; that path is for pipelines, not the chat flow.)
 
 No `after` yet? See [propose-mode.md](propose-mode.md): synthesize it from the proposed edit, run the ladders, rewrite an unsafe change into a safe one.
 

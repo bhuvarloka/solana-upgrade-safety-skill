@@ -12,12 +12,13 @@ function main(argv: string[]): number {
     options: {
       out: { type: "string" },
       assume: { type: "string" },
+      json: { type: "boolean" },
     },
   });
 
   const [beforePath, afterPath] = positionals;
   if (!beforePath || !afterPath) {
-    console.error("usage: cli.ts <before.json> <after.json> [--out <dir>] [--assume <model>]");
+    console.error("usage: cli.ts <before.json> <after.json> [--out <dir>] [--json] [--assume <model>]");
     return 2;
   }
 
@@ -36,16 +37,19 @@ function main(argv: string[]): number {
   if (result.model.caveat) console.error(`caveat: ${result.model.caveat}`);
   if (result.model.refuse) console.error(`refused: ${result.model.reason}`);
 
-  console.log(`verdict: ${result.verdict}`);
-
   const out = values.out;
-  if (out !== undefined) {
-    const artifacts = generateArtifacts(before, after, result);
-    mkdirSync(out, { recursive: true });
-    for (const [name, content] of Object.entries(artifacts)) {
-      writeFileSync(`${out}/${name}`, content);
+  if (values.json) {
+    console.log(JSON.stringify({ verdict: result.verdict, artifacts: generateArtifacts(before, after, result) }));
+  } else {
+    console.log(`verdict: ${result.verdict}`);
+    if (out !== undefined) {
+      const artifacts = generateArtifacts(before, after, result);
+      mkdirSync(out, { recursive: true });
+      for (const [name, content] of Object.entries(artifacts)) {
+        writeFileSync(`${out}/${name}`, content);
+      }
+      console.log(`wrote ${Object.keys(artifacts).length} artifact(s) to ${out}/`);
     }
-    console.log(`wrote ${Object.keys(artifacts).length} artifact(s) to ${out}/`);
   }
 
   return result.verdict === "MIGRATE" ? 1 : 0; // exit 1 = CI gate fails
