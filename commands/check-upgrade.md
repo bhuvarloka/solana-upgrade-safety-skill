@@ -9,14 +9,15 @@ Run the upgrade-safety analysis on a pair of Anchor IDLs (or a proposed change) 
 ## Usage
 
 ```
-pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--out <dir>] [--assume <model>]
+pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--json | --out <dir>] [--assume <model>]
 ```
 
 `<skill-dir>` is the installed skill directory (e.g. `~/.claude/skills/upgrade-safety`). Use absolute paths for the IDLs so it runs from any working directory.
 
 - `<before.json>` — the currently-deployed IDL (or `anchor idl fetch <program-id>`).
 - `<after.json>` — the new/proposed IDL.
-- `--out <dir>` — write artifacts to `<dir>`. Omit it to print the verdict only (no files).
+- `--json` — print a single JSON line with the verdict and the artifacts (including `report.md`) and write nothing. Use this to diagnose.
+- `--out <dir>` — write the migration artifacts to `<dir>`. Use this only when generating the migration.
 - `--assume <model>` — force the serialization model: `anchor-borsh` | `zero-copy` | `manual`. Skips detection.
 
 ## What it does
@@ -29,6 +30,7 @@ pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--out <
 
 - `0` — SAFE, COORDINATE, or REFUSE.
 - `1` — MIGRATE (an in-place upgrade would corrupt data). Use this to gate a PR in CI.
+- `2` — bad input (report the error, not a verdict).
 
 ## Proposed-change mode
 
