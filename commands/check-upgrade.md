@@ -21,9 +21,9 @@ pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--out <
 
 ## What it does
 
-1. **Gate** — detect the serialization model ([detect-model.md](../skill/detect-model.md)). Refuses confidently on manual/unknown layouts.
-2. **Classify** — walk the five compatibility categories ([classify.md](../skill/classify.md)) and roll up to SAFE / MIGRATE / COORDINATE / REFUSE.
-3. **Generate** (with `--out`) — write `report.md`; add `release-checklist.md` unless SAFE, and `migration.rs` / `migration.ts` / `regression.test.ts` when MIGRATE ([generate-migration.md](../skill/generate-migration.md)).
+1. **Gate** — detect the serialization model. Refuses confidently on manual/unknown layouts.
+2. **Classify** — walk the five compatibility categories and roll up to SAFE / MIGRATE / COORDINATE / REFUSE.
+3. **Generate** (with `--out`) — write `report.md`; add `release-checklist.md` unless SAFE, and `migration.rs` / `migration.ts` / `regression.test.ts` when MIGRATE.
 
 ## Exit codes
 
@@ -32,4 +32,4 @@ pnpm -C <skill-dir>/engine run check-upgrade <before.json> <after.json> [--out <
 
 ## Proposed-change mode
 
-No `after.json` yet? Describe the edit ("add a `bump` field to `Vault`", "change `balance` to u128") and the skill synthesizes the `after` IDL, runs the ladders, and rewrites an unsafe change into a safe one. See [propose-mode.md](../skill/propose-mode.md).
+No `after.json` yet? Describe the edit ("add a `bump` field to `Vault`", "change `balance` to u128") and the skill synthesizes the `after` IDL, runs the ladders, and rewrites an unsafe change into a safe one.
